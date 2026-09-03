@@ -1,0 +1,22 @@
+{
+  "backbone": "facebook/dinov3-vitb16-pretrain-lvd1689m",
+  "input_size": 384,
+  "single_gpu": true,
+  "effective_batch": 32,
+  "head_epochs": 2,
+  "partial_epochs": 3,
+  "unfrozen_last_blocks": 2,
+  "feature_pooling": "CLS + masked valid-patch mean",
+  "loss_weights": {
+    "disaster": 0.15,
+    "severity": 0.7,
+    "joint9": 0.15
+  },
+  "label_smoothing": 0.03,
+  "snapshot_blend": [
+    "partial_epoch_2",
+    "partial_epoch_3"
+  ],
+  "probabilities": "/workspace/output/dinov3_b384_standalone_expert/test_probabilities_dinov3_snapshot23.npz",
+  "submission": "/workspace/output/dinov3_b384_standalone_expert/submission.csv"
+}

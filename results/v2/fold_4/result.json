@@ -1,0 +1,76 @@
+{
+  "fold": 4,
+  "best_meta": {
+    "stage": "partial",
+    "stage_epoch": 4,
+    "micro_f1": 0.9266304347826086
+  },
+  "plain_metrics": {
+    "micro_f1": 0.9266304347826086,
+    "acc_jenis": 0.9948512585812357,
+    "acc_kerusakan": 0.8584096109839817
+  },
+  "tta_metrics": {
+    "micro_f1": 0.9273455377574371,
+    "acc_jenis": 0.9948512585812357,
+    "acc_kerusakan": 0.8598398169336384
+  },
+  "history": [
+    {
+      "stage": "heads",
+      "stage_epoch": 1,
+      "loss": 0.4440169093538282,
+      "micro_f1": 0.8817219679633868,
+      "acc_jenis": 0.9928489702517163,
+      "acc_kerusakan": 0.7705949656750573
+    },
+    {
+      "stage": "heads",
+      "stage_epoch": 2,
+      "loss": 0.32047229790046594,
+      "micro_f1": 0.8878718535469108,
+      "acc_jenis": 0.9937070938215103,
+      "acc_kerusakan": 0.7820366132723112
+    },
+    {
+      "stage": "partial",
+      "stage_epoch": 1,
+      "loss": 0.2882281322217066,
+      "micro_f1": 0.9080377574370709,
+      "acc_jenis": 0.9928489702517163,
+      "acc_kerusakan": 0.8232265446224256
+    },
+    {
+      "stage": "partial",
+      "stage_epoch": 2,
+      "loss": 0.19765814816709473,
+      "micro_f1": 0.9191933638443935,
+      "acc_jenis": 0.994279176201373,
+      "acc_kerusakan": 0.8441075514874142
+    },
+    {
+      "stage": "partial",
+      "stage_epoch": 3,
+      "loss": 0.1281820687241096,
+      "micro_f1": 0.9256292906178489,
+      "acc_jenis": 0.9948512585812357,
+      "acc_kerusakan": 0.8564073226544623
+    },
+    {
+      "stage": "partial",
+      "stage_epoch": 4,
+      "loss": 0.07871582021119852,
+      "micro_f1": 0.9266304347826086,
+      "acc_jenis": 0.9948512585812357,
+      "acc_kerusakan": 0.8584096109839817
+    },
+    {
+      "stage": "partial",
+      "stage_epoch": 5,
+      "loss": 0.05855197682622799,
+      "micro_f1": 0.9266304347826086,
+      "acc_jenis": 0.995137299771167,
+      "acc_kerusakan": 0.8581235697940504
+    }
+  ]
+}

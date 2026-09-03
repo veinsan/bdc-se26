@@ -1,0 +1,15 @@
+{
+  "head_epochs": 2,
+  "partial_epochs": 4,
+  "use_tta": false,
+  "pooled_plain": {
+    "micro_f1": 0.9278114632193113,
+    "acc_jenis": 0.9954810662395607,
+    "acc_kerusakan": 0.8601418601990619
+  },
+  "pooled_tta": {
+    "micro_f1": 0.9277828623727262,
+    "acc_jenis": 0.9951950577737101,
+    "acc_kerusakan": 0.8603706669717424
+  }
+}
