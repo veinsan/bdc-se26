@@ -1,64 +1,64 @@
-# 🏆 BDC Statistics Explore 2026: Klasifikasi Citra Bencana
+# 🏆 BDC Statistics Explore 2026: Disaster Image Classification
 
-**Juara 1** di [Big Data Competition Statistics Explore 2026](https://www.kaggle.com/competitions/big-data-competition-statistics-explore-2026/leaderboard), jalur citra.
+**1st place** solution for the image track of the [Big Data Competition Statistics Explore 2026](https://www.kaggle.com/competitions/big-data-competition-statistics-explore-2026/leaderboard).
 
-| Leaderboard | Micro F1 | Peringkat |
-| ----------- | -------- | --------- |
-| Public      | 0.933    | #2        |
-| **Private** | **0.904** | **#1**   |
+| Leaderboard | Micro F1  | Rank   |
+| ----------- | --------- | ------ |
+| Public      | 0.933     | #2     |
+| **Private** | **0.904** | **#1** |
 
-**Tim (Institut Teknologi Bandung):** Riantama Putra · Farrel Athalla Putra · Ayu Nagita Cahyaning Wulan
+**Team (Institut Teknologi Bandung):** Riantama Putra, Farrel Athalla Putra, Ayu Nagita Cahyaning Wulan
 
-## Tugas
+## Task
 
-Setiap foto bencana diberi dua label sekaligus:
+Each disaster photo receives two labels:
 
-- **`jenis`**: Banjir, Gempa Bumi, Kebakaran
-- **`kerusakan`**: Ringan, Sedang, Berat
+- **`jenis`** (disaster type): Flood, Earthquake, Fire
+- **`kerusakan`** (damage severity): Light, Moderate, Heavy
 
-Data latih berisi 17.482 citra (9 kelas jenis × kerusakan), data uji 450 citra. Metriknya micro F1 atas 900 baris, yang sama dengan rata-rata akurasi `jenis` dan akurasi `kerusakan`. Karena `jenis` sudah ~99,6%, poin tambahan hanya bisa didapat dari `kerusakan`.
+The training set has 17,482 images across 9 type × severity classes, and the test set has 450 images. The metric is micro F1 over 900 rows, which is equal to the mean of type accuracy and severity accuracy. Type accuracy is already around 99.6%, so nearly all remaining gains come from severity.
 
-## Solusi
+## Approach
 
-**Backbone:** DINOv3 ViT-7B/16 (`facebook/dinov3-vit7b16-pretrain-lvd1689m`) pada input 384px dan bf16. Hanya 6 blok terakhir dari 40 yang dilatih (1,0 miliar dari 6,7 miliar parameter).
+**Backbone:** DINOv3 ViT-7B/16 (`facebook/dinov3-vit7b16-pretrain-lvd1689m`) at 384px in bf16. Only the last 6 of 40 transformer blocks are fine-tuned, which is 1.0B of 6.7B parameters.
 
-**1. Validasi tanpa bocor.** Sebanyak 38% citra punya kembaran yang nyaris identik, kebanyakan dari kamera sungai yang dipasang tetap. Kami mengelompokkan adegan dengan *difference hash* lalu menambahkan pencocokan yang tahan rotasi dan cermin (deskriptor polar-Fourier dengan verifikasi NCC). Setelah itu dipakai `StratifiedGroupKFold`. Split acak biasa akan membocorkan **45%** baris validasi.
+**1. Leak-free validation.** About 38% of images have a near-duplicate, mostly frames from fixed river cameras. Scenes are grouped by difference hash, then extended with rotation- and mirror-invariant matching (polar-Fourier descriptors verified by NCC). Folds are built with `StratifiedGroupKFold`. A naive random split would leak **45%** of the validation rows.
 
-**2. Kepala khusus kerusakan.** Bukti kerusakan bersifat lokal, berurutan, dan maknanya beda untuk tiap jenis bencana.
+**2. Severity-specific head.** Damage evidence is local, ordinal, and means something different for each disaster type.
 
-| Masalah | Solusi |
-| ------- | ------ |
-| *Mean pooling* menyamarkan kerusakan lokal | 4 aliran fitur: CLS, mean, *gated attention pool*, top-10% patch |
-| Arti "berat" beda untuk tiap jenis bencana | **FiLM**: fitur kerusakan dikondisikan pada probabilitas jenis |
-| Ringan < Sedang < Berat itu berurutan | Kepala ordinal **CORN** + target lunak **SORD** |
-| Interaksi jenis × kerusakan | Kepala gabungan 9 kelas |
+| Problem | Solution |
+| ------- | -------- |
+| Mean pooling dilutes local damage | Four feature streams: CLS, mean, gated attention pool, top-10% patches |
+| "Heavy" means different things per disaster type | **FiLM** conditioning of severity features on predicted type probabilities |
+| Light < Moderate < Heavy is ordered | **CORN** ordinal head with **SORD** soft targets |
+| Type × severity interaction | Joint 9-class head |
 
-**3. Label berderau.** Sekitar 19% citra berada di kelompok adegan yang labelnya saling bertentangan, dan 91% konfliknya hanya selisih satu tingkat. Karena itu dipakai target lunak dan *label smoothing*, bukan one-hot.
+**3. Label noise.** About 19% of images belong to scene groups with conflicting severity labels, and 91% of those conflicts are only one rank apart. Training uses soft targets and label smoothing instead of one-hot labels.
 
-**4. Augmentasi yang menjaga bukti.** MixUp tanpa CutMix, karena CutMix bisa memotong area kerusakan. *Hue jitter* dibatasi ±0,02 karena warna adalah sinyal utama untuk `jenis`. Kami juga menambahkan derau Gaussian, sebab satu kelas punya derau 10× lebih tinggi dari kelas lain dan ini bisa jadi jalan pintas.
+**4. Evidence-preserving augmentation.** MixUp is used without CutMix, since CutMix can cut out the damaged region. Hue jitter is capped at ±0.02 because color is the strongest cue for disaster type. Gaussian noise is added to every class, because one class carries 10× more sensor noise than the rest and would otherwise become a shortcut.
 
-**5. Dekode.** Bobot paduan kepala dan *offset* log-prob per kelas disetel di validasi untuk mengurangi bias ke kelas "Sedang".
+**5. Decoding.** Head blend weights and per-class log-probability offsets are tuned on validation to reduce bias toward the Moderate class.
 
-## Hasil validasi (fold 0, berkelompok)
+## Validation Results (fold 0, grouped)
 
-| Akurasi jenis | Akurasi kerusakan | Micro F1 |
+| Type Accuracy | Severity Accuracy | Micro F1 |
 | ------------- | ----------------- | -------- |
 | 0.9963        | 0.7812            | 0.8888   |
 
-Batas atas teoretis akurasi kerusakan (label mayoritas per adegan) adalah 0,927.
+The theoretical ceiling for severity accuracy (majority label per scene group) is 0.927.
 
-## Struktur repo
+## Repository Structure
 
 ```
-notebooks/04_dinov3_severity_enhanced.ipynb   # pipeline lengkap: EDA → validasi → training → submisi
-results/submission_dinov3_vit7b16_severity.csv  # submisi final
-docs/paper.pdf                                  # paper lomba
+notebooks/04_dinov3_severity_enhanced.ipynb     # full pipeline: EDA, validation, training, submission
+results/submission_dinov3_vit7b16_severity.csv  # final submission
+docs/presentation.pdf                           # competition presentation slides
 ```
 
-## Menjalankan
+## Usage
 
-- **Kebutuhan:** GPU 80 GB (A100/H100), token Hugging Face yang sudah disetujui lisensi DINOv3, dan kredensial Kaggle.
-- **Training:** sekitar 2,8 jam untuk 8 epoch di A100 80GB. Isi `HF_TOKEN` dan `KAGGLE_API_TOKEN` di sel *Kredensial* (atau lewat env var), lalu Run All.
-- **Inferensi saja:** set `RUN_MODE = 'INFERENCE'` dan arahkan `MODEL_PATH` ke bobot `dinov3_vit7b16_severity.pt`. Bobot ini berukuran 2 GB sehingga tidak disimpan di repo.
+- **Requirements:** an 80 GB GPU (A100/H100), a Hugging Face token with access to DINOv3, and Kaggle API credentials.
+- **Training:** about 2.8 hours for 8 epochs on an A100 80GB. Set `HF_TOKEN` and `KAGGLE_API_TOKEN` in the *Kredensial* cell or as environment variables, then run all cells.
+- **Inference only:** set `RUN_MODE = 'INFERENCE'` and point `MODEL_PATH` to `dinov3_vit7b16_severity.pt`. The weights are 2 GB and are not stored in this repository.
 
-Format submisi: `jenis` 1/2/3 = Banjir/Gempa Bumi/Kebakaran, `kerusakan` 1/2/3 = Berat/Ringan/Sedang.
+Submission label codes: `jenis` 1/2/3 = Flood/Earthquake/Fire, `kerusakan` 1/2/3 = Heavy/Light/Moderate.
