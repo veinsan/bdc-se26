@@ -1,2 +1,11 @@
-#Dataset
+# Dataset
 /data/
+
+# Bobot model (2 GB, di luar batas GitHub)
+/model/
+*.pt
+
+# Output notebook
+/output/
+.ipynb_checkpoints/
+__pycache__/
